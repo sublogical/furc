@@ -1,4 +1,5 @@
-
+require 'rubygems'
+require 'furc'
 
 s = Furc::Spawner.new
 
