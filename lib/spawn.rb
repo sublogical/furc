@@ -2,23 +2,36 @@
 #
 # Copyright (c) 2009 by Thoughtcrime, llc. All Rights Reserved.
 #
-# File name: spawn.rb
+# File name: furc.rb
 # Author:    Jay Hoover
 # Date:      11/22/2009
 #
 #++
 #
 # === File Description
-# This file creates a simple managed spawner. Forks and maintains a set of worker children, restarting them as they are killed.
+# This file creates a simple managed spawner. Forks and maintains a set of
+# worker children, restarting them as they are killed.
 #
 
 
-module Server
+module Furc
   class Spawner
+    
+    # === Description
+    # Causes the spawner to exit by sending SIGINT to all spawned processes
+    # then waiting.
+    #
     def exit
       @exitting = true
       @worker_pids.each do |pid|
         Process.kill('INT', pid)
+      end
+
+      @worker_pids.each do |pid|
+        begin
+          Process.wait(pid)
+        rescue Errno::ECHILD
+        end
       end
     end
 
@@ -32,7 +45,7 @@ module Server
     #   * :log - logger to use for spawning events
     #   * :verbose - whether to include verbose logging
     #
-    def run(workers, options = {}, &block)
+    def start(workers, options = {}, &block)
       @exitting = false      
       @worker_pids = []
       workers.times do
@@ -59,24 +72,3 @@ module Server
     end
   end
 end
-
-s = Server::Spawner.new
-
-Thread.new do
-  s.run(10, food) do |type_of_food|
-    sleep rand(10)
-    if rand(5) = 0 then
-      puts "found cheese"
-    end
-  end
-end
-
-puts "waiting 15 seconds"
-3.times do |ii|
-  sleep 5
-  puts "waited #{(ii+1) * 5} seconds"
-end
-puts "wait complete"
-
-s.exit
-
